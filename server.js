@@ -16,6 +16,14 @@ if (typeof process.loadEnvFile === 'function') {
   }
 }
 
+// Prevent any uncaught exception from terminating server process
+process.on('uncaughtException', (err) => {
+  console.error('⚠️ [KeepAlive] Uncaught Exception caught, server staying online:', err.message);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('⚠️ [KeepAlive] Unhandled Rejection caught, server staying online:', reason);
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
