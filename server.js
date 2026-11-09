@@ -403,8 +403,7 @@ app.post('/api/register', async (req, res) => {
       newUser = { id: ins.lastID, username: cleanUsername, full_name: cleanFullName, email: cleanEmail, monthly_budget: 20000, avatar_color: 'sky', created_at: new Date() };
     }
 
-    // Seed welcoming sample expenses for the new user
-    await seedSampleExpenses(newUser.id);
+    // New users start with fresh private workspace (no pre-seeded data from other users)
 
     // Establish session
     req.session.user = {

@@ -53,21 +53,34 @@
     ];
   }
 
-  function getMockExpenses() {
+  function getUserExpenseStorageKey(userId) {
+    const active = getMockUser();
+    const id = userId || (active ? (active.id || active.username) : 'demo');
+    return `et_user_expenses_${id}`;
+  }
+
+  function getMockExpenses(userId) {
+    const active = getMockUser();
+    const key = getUserExpenseStorageKey(userId);
     try {
-      const raw = localStorage.getItem('et_mock_expenses');
+      const raw = localStorage.getItem(key);
       if (raw) return JSON.parse(raw);
     } catch (e) {}
-    const initial = getMockSeedExpenses();
+
+    // User Data Isolation: Only demo and badhon get sample seeded expenses.
+    // Newly registered users start with their own private empty expense records.
+    const isDemo = active && (active.username === 'demo' || active.username === 'badhon');
+    const initial = isDemo ? getMockSeedExpenses() : [];
     try {
-      localStorage.setItem('et_mock_expenses', JSON.stringify(initial));
+      localStorage.setItem(key, JSON.stringify(initial));
     } catch (e) {}
     return initial;
   }
 
-  function saveMockExpenses(list) {
+  function saveMockExpenses(list, userId) {
+    const key = getUserExpenseStorageKey(userId);
     try {
-      localStorage.setItem('et_mock_expenses', JSON.stringify(list));
+      localStorage.setItem(key, JSON.stringify(list));
     } catch (e) {}
   }
 
@@ -183,8 +196,9 @@
         return createMockResponse({ success: false, message: 'Username is already taken.' }, 400);
       }
 
+      const newId = Date.now();
       const newUser = {
-        id: Date.now(),
+        id: newId,
         username: cleanUser,
         password: cleanPass,
         full_name: body.full_name || cleanUser,
@@ -195,6 +209,8 @@
       users.push(newUser);
       try {
         localStorage.setItem('et_registered_users', JSON.stringify(users));
+        // Strict Data Isolation: Start this new user with their own private empty expense records
+        localStorage.setItem(`et_user_expenses_${newId}`, JSON.stringify([]));
       } catch (e) {}
       saveMockUser(newUser);
       localStorage.setItem('et_is_authenticated', 'true');
@@ -203,6 +219,7 @@
 
     if (pathname === '/api/logout') {
       localStorage.removeItem('et_is_authenticated');
+      localStorage.removeItem('et_session_user');
       return createMockResponse({ success: true, message: 'Logged out successfully' });
     }
 
@@ -846,6 +863,162 @@
         if (usernameInput) usernameInput.value = 'demo';
         if (passwordInput) passwordInput.value = 'password123';
         lampLoginForm.dispatchEvent(new Event('submit'));
+      });
+    }
+
+    // ------------------------------------------------------------
+    // Switch between Sign In and Create Account Tabs
+    // ------------------------------------------------------------
+    const loginPanel = document.getElementById('loginPanel');
+    const registerPanel = document.getElementById('registerPanel');
+    const tabSwitchLoginBtn = document.getElementById('tabSwitchLoginBtn');
+    const tabSwitchRegisterBtn = document.getElementById('tabSwitchRegisterBtn');
+    const goToRegisterLink = document.getElementById('goToRegisterLink');
+    const goToLoginLink = document.getElementById('goToLoginLink');
+    const lampRegisterForm = document.getElementById('lampRegisterForm');
+    const regSubmitBtn = document.getElementById('lampRegisterSubmitBtn');
+    const toggleRegPasswordBtn = document.getElementById('toggleRegPasswordBtn');
+    const regPasswordInput = document.getElementById('regPassword');
+
+    function switchAuthTab(tab) {
+      hideAlert();
+      if (tab === 'register') {
+        if (loginPanel) loginPanel.classList.add('hidden');
+        if (registerPanel) registerPanel.classList.remove('hidden');
+        if (tabSwitchRegisterBtn) {
+          tabSwitchRegisterBtn.className = 'py-2 px-3 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center space-x-1.5 text-slate-950 bg-gradient-to-r from-yellow-400 to-amber-400 shadow-md shadow-yellow-500/25 active:scale-95';
+        }
+        if (tabSwitchLoginBtn) {
+          tabSwitchLoginBtn.className = 'py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-300 flex items-center justify-center space-x-1.5 text-slate-400 hover:text-slate-200 active:scale-95';
+        }
+        const regFullName = document.getElementById('regFullName');
+        if (regFullName) regFullName.focus();
+      } else {
+        if (registerPanel) registerPanel.classList.add('hidden');
+        if (loginPanel) loginPanel.classList.remove('hidden');
+        if (tabSwitchLoginBtn) {
+          tabSwitchLoginBtn.className = 'py-2 px-3 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center space-x-1.5 text-slate-950 bg-gradient-to-r from-yellow-400 to-amber-400 shadow-md shadow-yellow-500/25 active:scale-95';
+        }
+        if (tabSwitchRegisterBtn) {
+          tabSwitchRegisterBtn.className = 'py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-300 flex items-center justify-center space-x-1.5 text-slate-400 hover:text-slate-200 active:scale-95';
+        }
+        if (usernameInput) usernameInput.focus();
+      }
+      refreshIcons();
+    }
+
+    if (tabSwitchLoginBtn) tabSwitchLoginBtn.addEventListener('click', () => switchAuthTab('login'));
+    if (tabSwitchRegisterBtn) tabSwitchRegisterBtn.addEventListener('click', () => switchAuthTab('register'));
+    if (goToRegisterLink) goToRegisterLink.addEventListener('click', () => switchAuthTab('register'));
+    if (goToLoginLink) goToLoginLink.addEventListener('click', () => switchAuthTab('login'));
+
+    if (toggleRegPasswordBtn && regPasswordInput) {
+      toggleRegPasswordBtn.addEventListener('click', () => {
+        const isPass = regPasswordInput.type === 'password';
+        regPasswordInput.type = isPass ? 'text' : 'password';
+        toggleRegPasswordBtn.innerHTML = `<i data-lucide="${isPass ? 'eye-off' : 'eye'}" class="w-4 h-4 transition-transform duration-200 scale-110 text-yellow-400"></i>`;
+        refreshIcons();
+      });
+    }
+
+    // Submit Lamp Register Form
+    if (lampRegisterForm) {
+      lampRegisterForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAlert();
+
+        const fullName = document.getElementById('regFullName')?.value?.trim();
+        const username = document.getElementById('regUsername')?.value?.trim();
+        const email = document.getElementById('regEmail')?.value?.trim();
+        const password = document.getElementById('regPassword')?.value;
+        const budget = parseFloat(document.getElementById('regBudget')?.value) || 20000;
+
+        if (!username || !password) {
+          showAlert('Please provide both username and password.');
+          shakeLoginCard();
+          return;
+        }
+
+        if (username.length < 3) {
+          showAlert('Username must be at least 3 characters long.');
+          shakeLoginCard();
+          return;
+        }
+
+        if (password.length < 6) {
+          showAlert('Password must be at least 6 characters long.');
+          shakeLoginCard();
+          return;
+        }
+
+        const originalText = regSubmitBtn.innerHTML;
+        regSubmitBtn.disabled = true;
+        regSubmitBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-slate-950"></i><span>Creating account...</span>`;
+        refreshIcons();
+
+        try {
+          const res = await apiFetch('/api/register', {
+            method: 'POST',
+            body: JSON.stringify({
+              username,
+              password,
+              full_name: fullName || username,
+              email: email || `${username}@expensetracker.local`,
+              monthly_budget: budget
+            })
+          });
+          const data = await safeJson(res);
+
+          if (res.ok && data.success) {
+            triggerSuccessAnimation(data.user?.full_name || username, 'Account Created Successfully!');
+            return;
+          } else {
+            // Check fallback for offline
+            const fallbackRes = await mockApiHandler('/api/register', {
+              method: 'POST',
+              body: JSON.stringify({
+                username,
+                password,
+                full_name: fullName || username,
+                email: email || `${username}@expensetracker.local`,
+                monthly_budget: budget
+              })
+            });
+            const fallbackData = await safeJson(fallbackRes);
+            if (fallbackRes.ok && fallbackData.success) {
+              triggerSuccessAnimation(fallbackData.user?.full_name || username, 'Account Created Successfully!');
+              return;
+            }
+
+            showAlert(data.message || fallbackData.message || 'Registration failed. Username may already be taken.');
+            regSubmitBtn.disabled = false;
+            regSubmitBtn.innerHTML = originalText;
+            refreshIcons();
+            shakeLoginCard();
+          }
+        } catch (err) {
+          const fallbackRes = await mockApiHandler('/api/register', {
+            method: 'POST',
+            body: JSON.stringify({
+              username,
+              password,
+              full_name: fullName || username,
+              email: email || `${username}@expensetracker.local`,
+              monthly_budget: budget
+            })
+          });
+          const fallbackData = await safeJson(fallbackRes);
+          if (fallbackRes.ok && fallbackData.success) {
+            triggerSuccessAnimation(fallbackData.user?.full_name || username, 'Account Created Successfully!');
+            return;
+          }
+
+          showAlert(fallbackData.message || 'Registration failed. Username may already be taken.');
+          regSubmitBtn.disabled = false;
+          regSubmitBtn.innerHTML = originalText;
+          refreshIcons();
+          shakeLoginCard();
+        }
       });
     }
 
