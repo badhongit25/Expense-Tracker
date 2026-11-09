@@ -1,27 +1,47 @@
-# 🚆 Trackr// - Personal Expense & Commute Tracker
+# 💡 Expense Tracker - Full-Stack Personal Finance Suite
 
-> A modern, full-stack personal finance application built specifically for daily commuters and students with a sleek developer-first aesthetic (VS Code / Ubuntu Dark mode), glassmorphic components, real-time analytics, and SQLite persistence.
+> A modern, full-stack personal finance application featuring an interactive **animated floor lamp login**, a multi-color **glassmorphic dashboard**, Chart.js visualizations, calendar expense tracking, and budget management.
 
-![Tech Stack](https://img.shields.io/badge/Stack-Node.js%20%7C%20Express%20%7C%20express--session%20%7C%20bcryptjs%20%7C%20SQLite3%20%7C%20TailwindCSS-38bdf8?style=flat-square)
+![Tech Stack](https://img.shields.io/badge/Stack-Node.js%20%7C%20Express%20%7C%20PostgreSQL%20%7C%20SQLite3%20%7C%20TailwindCSS-38bdf8?style=flat-square)
+![Branding](https://img.shields.io/badge/Developed%20By-Badhon%20Paul-amber?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-emerald?style=flat-square)
 
 ---
 
-## 📸 Core Features
+## 🌟 Key Highlights & Features
 
-- 🔐 **Complete Session Authentication**: Built-in authentication powered by `express-session`, cookie-based sessions, and `bcryptjs` salted password hashing.
-- 🛡️ **Protected Dashboard**: Full route guards redirect unauthenticated users to `/login`. Only active logged-in users can access the dashboard and APIs.
-- 👤 **Clean Modern Dark-Themed UI**: Register and Login pages styled with Tailwind CSS, glassmorphism cards, glowing focus states, password strength indicator, and live password match checking.
-- 🚪 **Secure Session Logout**: One-click Logout buttons in desktop and mobile headers that safely destroy the server session and clear cookies.
-- 🧪 **Pre-seeded Demo Account**: Ready-to-use demo credentials (`demo` / `password123`) with an "Auto Fill" button for immediate evaluation.
-- 🌌 **Developer-First Glassmorphic Dark UI**: Deep space slate tones (`#080c14`), smooth backdrop blur, glowing neon borders, and monospace data typography.
-- 🚆 **Commute Analytics Hub**: Dedicated focus on daily commute expenses (**Metro Rail**, **Uber**, **DIU Commute**) with auto-calculated commute ratios and trip frequency.
-- 📊 **Interactive Category Doughnut Chart**: Powered by **Chart.js** with animated hover interactions, dynamic center spend indicator, and interactive custom badge legend.
-- ⚡ **Instant CRUD & SQLite Database**: Create, Read, Update, and Delete transactions with instant local persistence using **SQLite3**.
-- 🔍 **Live Search & Filter Engine**: Filter by predefined categories (*Metro Rail*, *Uber*, *DIU Commute*, *Tuition Snacks*, *Gadgets*, *Others*), search by description/note, or filter by month (*This Month*, *Last Month*, *All Time*).
-- 💱 **Multi-Currency Toggle**: Instant toggle between Bangladeshi Taka (`৳ BDT`) and US Dollar (`$ USD`).
-- 📥 **CSV Data Export**: Export your complete transaction history or filtered results straight to `.csv` format.
-- 📱 **Fully Responsive App Shell**: Collapsible sidebar, mobile slide-out navigation drawer, and adaptable glass cards.
+### 💡 1. Interactive Floor Lamp Login (`index.html`)
+- **Initial State:** Minimalist dark room with an architectural floor lamp on the left. The login card is hidden on the right.
+- **Physical Pull-Cord Switch:** Clicking the hanging cord triggers a mechanical click sound (synthesized via Web Audio API) and a tactile cord pull animation.
+- **Volumetric Light Swipe Down:** The lamp shade illuminates, casting a smooth downward volumetric swipe of light down to the floor line with a radiant floor pool and floating magical sparkles.
+- **Sequenced Staggered Entrance:** Once the light swipe illuminates the room, the dark glassmorphic login card smoothly glides in from the right with unblurring entrance animation.
+- **Micro-Interactions & Success Animation:** Input focus glow, ripple buttons, password show/hide toggle, and a 1.5-second glowing checkmark modal with progress bar upon successful login.
+
+### 📊 2. Multi-Color Glassmorphic Dashboard (`dashboard.html`)
+- **Vibrant KPI Glass Cards:**
+  - **Total Expenses:** Electric Cyan Glass with all-time total and count.
+  - **This Month:** Lush Emerald Glass tracking current billing cycle.
+  - **Today's Spending:** Royal Violet Glass highlighting daily transactions.
+  - **Selected Period:** Sunset Amber Glass reflecting custom filter periods.
+- **Interactive Click-to-Filter on KPI Cards:** Clicking any KPI card triggers a glowing outline, tactile bounce, and automatically filters the transactions table (e.g. clicking "This Month" filters transactions to the current month).
+- **Active Filter Bar:** Visual filter pill appears when filtered, complete with a 1-click reset button.
+- **Chart.js Visualizations:**
+  - **Category Breakdown Doughnut:** Animated doughnut chart with center total spend and interactive legend pills.
+  - **6-Month Spending Trends:** Bar chart tracking historical monthly expenses.
+- **Expense History Table:** Live search, category dropdown filter, month filter, row hover slide animation, and modal dialogs for Adding, Editing, and Deleting transactions.
+
+### 📅 3. Interactive Calendar View
+- Visual monthly calendar grid showing daily spending color-coded pills:
+  - 🟢 **Low (< ৳500):** Emerald badge
+  - 🟡 **Medium (৳500 - ৳1500):** Amber badge
+  - 🔴 **High (> ৳1500):** Rose badge
+- Click any date cell to view itemized transactions or log a new expense for that specific day.
+
+### 👤 4. User Profile & Monthly Budget Manager
+- Customizable profile avatar with color swatch picker (Sky, Emerald, Violet, Amber, Rose).
+- Lifetime expense statistics and transaction counters.
+- **Monthly Budget Target Meter:** Visual multi-color progress meter calculating percentage utilized, remaining balance, and financial discipline advice.
+- Password change modal and transaction history reset (with safety confirmation).
 
 ---
 
@@ -30,102 +50,71 @@
 ```text
 Expense Tracker/
 ├── database/
-│   ├── db.js             # SQLite3 connection, schema init, async wrappers, seed data
-│   └── expenses.db       # Auto-created SQLite database file
-├── public/
-│   ├── css/
-│   │   └── style.css     # Glassmorphism, glow effects, badge styling & scrollbars
-│   ├── js/
-│   │   ├── api.js        # Frontend REST API client
-│   │   ├── charts.js     # Chart.js doughnut chart instance & dynamic legend
-│   │   └── app.js        # App state management, DOM logic, modals & toasts
-│   └── index.html        # Main dashboard with Tailwind CSS & Lucide icons
+│   └── db.js             # Dual DB connector (PostgreSQL pool with SQLite transparent fallback)
+├── public/               # Synced public web assets
+│   ├── index.html        # Floor lamp animated login
+│   ├── dashboard.html    # Main full-featured dashboard
+│   └── script.js         # Unified client-side logic
 ├── routes/
-│   └── expenses.js       # Express REST API routes (/api/expenses, /api/summary)
-├── package.json          # Dependencies and npm scripts
-├── server.js             # Express application entry point & static server
-└── README.md             # Documentation
+│   ├── auth.js           # Authentication REST routes
+│   └── expenses.js       # Expense CRUD REST routes
+├── .env.example          # Sample environment variables
+├── .gitignore            # Git ignore configuration
+├── dashboard.html        # Dashboard view
+├── index.html            # Main landing & animated login
+├── package.json          # Node dependencies & npm scripts
+├── script.js             # Client controller
+├── server.js             # Express.js backend server with session authentication
+└── README.md             # Project documentation
 ```
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend**:
-  - Semantic HTML5
-  - [Tailwind CSS](https://tailwindcss.com/) (Styling & layout)
-  - [Chart.js](https://www.chartjs.org/) (Interactive data visualization)
-  - [Lucide Icons](https://lucide.dev/) (Developer icons)
-  - Vanilla JavaScript (Zero bloated frontend frameworks)
-- **Backend**:
-  - [Node.js](https://nodejs.org/) (Runtime)
-  - [Express.js](https://expressjs.com/) (RESTful API & Static file server)
-- **Database**:
-  - [SQLite3](https://www.sqlite.org/) (Zero-config, fast, embedded file database)
+- **Backend:** Node.js, Express.js, `express-session`, `bcryptjs`, CORS
+- **Database:** PostgreSQL (Primary with auto-migration) with SQLite3 transparent fallback
+- **Frontend:** Semantic HTML5, Tailwind CSS, Vanilla JavaScript, Chart.js, Lucide Icons
+- **Audio:** Web Audio API (Synthesized mechanical pull-cord click sound)
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Getting Started
 
-### 1. Prerequisites
-Ensure you have [Node.js](https://nodejs.org/) installed on your machine (`node -v` &ge; v18.x).
+### 1. Clone the Repository
+```bash
+git clone https://github.com/badhongit25/Expense-Tracker.git
+cd Expense-Tracker
+```
 
 ### 2. Install Dependencies
-Dependencies (`express`, `sqlite3`, `cors`) are already configured in `package.json`. If installing on a new machine:
 ```bash
 npm install
 ```
 
-### 3. Start the Server
-Run the production server:
+### 3. Configure Environment Variables
+Copy `.env.example` to `.env` and adjust your credentials if using PostgreSQL (otherwise SQLite is used automatically):
+```bash
+cp .env.example .env
+```
+
+### 4. Start the Server
 ```bash
 npm start
 ```
-Or run with auto-reload (development mode):
-```bash
-npm run dev
-```
 
-### 4. Open in Browser
-Visit your browser at:
+### 5. Access the Application
+Open your browser and navigate to:
 ```text
 http://localhost:3000
 ```
 
-> **Note**: On first launch, the SQLite database (`database/expenses.db`) will be automatically created and populated with realistic sample transactions so the dashboard is immediately interactive!
+- **Demo Credentials:** `demo` / `password123` (or click the "Use Demo Account" quick button on the login card).
 
 ---
 
-## 📡 REST API & Authentication Reference
+## 📄 License & Attribution
 
-### 🔐 Authentication Endpoints
+Developed with ❤️ by **badhon**.
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Register new user account (`username`, `password`), hashes with bcryptjs, creates session |
-| `POST` | `/api/auth/login` | Verify credentials against SQLite `users` table and establish session |
-| `POST` | `/api/auth/logout` | Destroy session, clear session cookie |
-| `GET` | `/logout` | Convenience GET logout link, redirects to `/login` |
-| `GET` | `/api/auth/me` | Check active session and return current user details |
-
-### 📊 Expense Endpoints (Protected by Session)
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/summary?month=this-month` | Aggregated monthly totals, commute ratios, and category breakdown for Chart.js |
-| `GET` | `/api/expenses?category=...&search=...&month=...` | List expenses matching query filters |
-| `POST` | `/api/expenses` | Add a new expense (`amount`, `category`, `date`, `description`) |
-| `PUT` | `/api/expenses/:id` | Update an existing expense record |
-| `DELETE` | `/api/expenses/:id` | Permanently delete an expense record |
-| `POST` | `/api/expenses/seed` | Reset or seed realistic sample demo transactions |
-
----
-
-## 🎨 Supported Expense Categories
-
-- 🚆 **Metro Rail** (`MRT Line 6 passes, single journey tokens`)
-- 🚗 **Uber** (`Uber Moto, UberX, ride shares`)
-- 🚌 **DIU Commute** (`Campus shuttle, green garden transport`)
-- 🍔 **Tuition Snacks** (`Evening cafeteria snacks, shawarma, tea`)
-- 💻 **Gadgets** (`Cables, peripherals, hardware upgrades`)
-- 📦 **Others** (`Stationery, books, miscellaneous`)
+Strictly branded: `developed by badhon`
