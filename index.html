@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In - Expense Tracker</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#080c14',
+              surface: '#0f172a',
+              card: '#131e33',
+              border: '#1e293b',
+              accent: '#facc15', // Lamp warm bright yellow
+              amberGlow: '#f59e0b'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Fira Code"', 'monospace']
+          },
+          animation: {
+            'pop-in': 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+            'cord-sway': 'cordSway 4s ease-in-out infinite alternate',
+            'float-particle': 'floatParticle 5s ease-in-out infinite'
+          },
+          keyframes: {
+            popIn: {
+              '0%': { transform: 'scale(0) rotate(-15deg)', opacity: '0' },
+              '70%': { transform: 'scale(1.15) rotate(3deg)', opacity: '1' },
+              '100%': { transform: 'scale(1) rotate(0deg)', opacity: '1' }
+            },
+            cordSway: {
+              '0%': { transform: 'rotate(0deg)' },
+              '50%': { transform: 'rotate(2.5deg)' },
+              '100%': { transform: 'rotate(-2.5deg)' }
+            },
+            floatParticle: {
+              '0%, 100%': { transform: 'translateY(0) translateX(0)', opacity: '0.3' },
+              '50%': { transform: 'translateY(-25px) translateX(8px)', opacity: '0.9' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --room-bg: #070a11;
+      --lamp-gold: #facc15;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--room-bg);
+      color: #f1f5f9;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: background-color 0.8s ease;
+    }
+
+    /* Ambient room background glow when lamp is turned ON */
+    body.lamp-is-on {
+      background-color: #0b0f19;
+      background-image: 
+        radial-gradient(ellipse 700px 600px at 28% 40%, rgba(250, 204, 21, 0.16) 0%, rgba(245, 158, 11, 0.05) 50%, transparent 80%),
+        radial-gradient(ellipse 900px 700px at 65% 50%, rgba(250, 204, 21, 0.08) 0%, rgba(245, 158, 11, 0.02) 40%, transparent 70%);
+    }
+
+    /* Floor line reflection */
+    .room-floor {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 90px;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+      pointer-events: none;
+    }
+
+    /* Lamp Pull-Cord interactive state */
+    #lampPullCord {
+      transform-origin: 236px 184px;
+      cursor: pointer;
+      transition: transform 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #lampPullCord:hover .cord-knob {
+      filter: drop-shadow(0 0 10px rgba(250, 204, 21, 1));
+      transform: scale(1.15);
+    }
+    #lampPullCord.pulling {
+      transform: translateY(22px) !important;
+    }
+
+    /* ============================================================ */
+    /* SEQUENCED VOLUMETRIC LIGHT SWIPE & STAGGERED LOGIN ENTRANCE  */
+    /* ============================================================ */
+
+    #lampLightGroup {
+      pointer-events: none;
+    }
+
+    /* 1. Bulb socket instant warm ignition */
+    #bulbGlowElement {
+      opacity: 0;
+      transform-origin: 218px 180px;
+      transform: scale(0.4);
+      transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    body.lamp-is-on #bulbGlowElement {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* 2. Volumetric Light Cone Beam: Smooth downward swipe from shade to floor */
+    #lightConeBeam {
+      opacity: 0;
+      transform-origin: 218px 178px;
+      transform: scaleY(0);
+      transition: opacity 0.2s ease, transform 0.48s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    body.lamp-is-on #lightConeBeam {
+      opacity: 1;
+      transform: scaleY(1);
+      transition: opacity 0.15s ease, transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* 3. Floor reflection pool blooms right as the light beam reaches the floor (320ms delay) */
+    #floorLightPool {
+      opacity: 0;
+      transform-origin: 218px 590px;
+      transform: scale(0.5);
+      transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transition-delay: 0s;
+    }
+    body.lamp-is-on #floorLightPool {
+      opacity: 1;
+      transform: scale(1);
+      transition-delay: 0.32s;
+    }
+
+    /* 4. Magical floating dust sparkles appear in the beam */
+    #svgParticles {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      transition-delay: 0s;
+    }
+    body.lamp-is-on #svgParticles {
+      opacity: 1;
+      transition-delay: 0.36s;
+    }
+
+    /* 5. Lamp Shade and Pole glow transitions */
+    body.lamp-is-on .lamp-shade-fill {
+      fill: #facc15 !important;
+      stroke: #ca8a04 !important;
+      filter: drop-shadow(0 0 24px rgba(250, 204, 21, 0.9));
+    }
+
+    body.lamp-is-on .shade-rim-fill {
+      fill: #fef08a !important;
+      stroke: #fde047 !important;
+      filter: drop-shadow(0 0 16px rgba(254, 240, 138, 0.95));
+    }
+
+    body.lamp-is-on .lamp-pole-glow {
+      stroke: rgba(250, 204, 21, 0.5) !important;
+      filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.4));
+    }
+
+    /* 6. RIGHT LOGIN CARD: Sequenced reveal after the lamp light swipe completes! */
+    #loginCardContainer {
+      opacity: 0;
+      transform: translateX(85px) scale(0.95);
+      filter: blur(8px);
+      pointer-events: none;
+      transition: 
+        opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+      transition-delay: 0s; /* Glides away instantly when turning lamp off */
+    }
+
+    body.lamp-is-on #loginCardContainer {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      filter: blur(0px);
+      pointer-events: auto;
+      transition-delay: 0.48s; /* Wait for lamp swipe to illuminate room first! */
+    }
+
+    /* 7. Dark Glassmorphism Login Card with warm ambient lamp rim illumination */
+    .login-card-glass {
+      background: rgba(13, 19, 33, 0.82);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      box-shadow: 
+        0 25px 60px -15px rgba(0, 0, 0, 0.8),
+        -8px 0 30px -5px rgba(250, 204, 21, 0.08);
+      transition: border-color 0.6s ease, box-shadow 0.6s ease;
+    }
+
+    body.lamp-is-on .login-card-glass {
+      border-color: rgba(250, 204, 21, 0.28);
+      box-shadow: 
+        0 25px 60px -15px rgba(0, 0, 0, 0.85),
+        -14px 0 45px -6px rgba(250, 204, 21, 0.24),
+        0 0 1px 1px rgba(250, 204, 21, 0.32);
+      transition-delay: 0.48s;
+    }
+
+    /* Input Fields */
+    .lamp-input {
+      background: rgba(9, 13, 24, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .lamp-input:focus {
+      border-color: #facc15;
+      box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.22);
+      outline: none;
+      background: rgba(15, 23, 42, 0.98);
+    }
+    .input-wrapper:focus-within i {
+      color: #facc15 !important;
+      transform: scale(1.1);
+      transition: all 0.2s ease;
+    }
+
+    /* Ripple micro-interaction */
+    .ripple-btn {
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+    .btn-ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: rippleAnim 600ms linear;
+      background-color: rgba(255, 255, 255, 0.4);
+      pointer-events: none;
+    }
+    @keyframes rippleAnim {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen relative flex flex-col justify-between selection:bg-yellow-400 selection:text-black">
+
+  <!-- Ambient Light Hint (Visible before clicking) -->
+  <div id="pullHintBanner" class="fixed top-8 left-1/2 -translate-x-1/2 z-30 transition-all duration-500 opacity-90 pointer-events-none">
+    <div class="px-4 py-2 rounded-full bg-slate-900/80 border border-slate-700/80 text-xs font-mono text-yellow-300/90 shadow-xl flex items-center space-x-2 backdrop-blur-md animate-pulse">
+      <i data-lucide="sparkles" class="w-3.5 h-3.5 text-yellow-400"></i>
+      <span>Click the lamp's pull-cord to illuminate the room</span>
+    </div>
+  </div>
+
+  <!-- Room Floor Base Line -->
+  <div class="room-floor"></div>
+
+  <!-- Main Split Layout Container -->
+  <main class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex-1 flex items-center justify-center relative z-10">
+    <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+
+      <!-- ============================================== -->
+      <!-- LEFT SIDE: INTERACTIVE FLOOR LAMP & LIGHT CONE -->
+      <!-- ============================================== -->
+      <div class="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[580px] sm:min-h-[640px]">
+        
+        <div class="relative w-[380px] sm:w-[440px] h-[580px] sm:h-[640px] flex items-center justify-center">
+
+          <!-- Architectural Floor Lamp with Mathematically Aligned Volumetric Light -->
+          <svg 
+            id="interactiveLampSvg"
+            class="relative z-20 w-full h-full drop-shadow-2xl overflow-visible" 
+            viewBox="0 0 440 640" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <!-- Metallic rod gradient -->
+              <linearGradient id="metalGrad" x1="215" y1="180" x2="221" y2="180" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#334155" />
+                <stop offset="50%" stop-color="#64748b" />
+                <stop offset="100%" stop-color="#1e293b" />
+              </linearGradient>
+
+              <!-- Main Volumetric Light Cone Gradient (Exact fit from shade y=178 to floor y=590) -->
+              <linearGradient id="mainBeamGrad" x1="218" y1="178" x2="218" y2="590" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+                <stop offset="8%" stop-color="#fef08a" stop-opacity="0.75" />
+                <stop offset="28%" stop-color="#fde047" stop-opacity="0.45" />
+                <stop offset="60%" stop-color="#facc15" stop-opacity="0.22" />
+                <stop offset="85%" stop-color="#eab308" stop-opacity="0.08" />
+                <stop offset="100%" stop-color="#ca8a04" stop-opacity="0.0" />
+              </linearGradient>
+
+              <!-- Inner Bright Core Beam Gradient -->
+              <linearGradient id="innerBeamGrad" x1="218" y1="178" x2="218" y2="590" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
+                <stop offset="15%" stop-color="#fef08a" stop-opacity="0.70" />
+                <stop offset="45%" stop-color="#fde047" stop-opacity="0.35" />
+                <stop offset="80%" stop-color="#facc15" stop-opacity="0.12" />
+                <stop offset="100%" stop-color="#ca8a04" stop-opacity="0.0" />
+              </linearGradient>
+
+              <!-- Floor Glow Radial Pool Gradient -->
+              <radialGradient id="floorPoolGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#fef08a" stop-opacity="0.85" />
+                <stop offset="35%" stop-color="#fde047" stop-opacity="0.50" />
+                <stop offset="70%" stop-color="#f59e0b" stop-opacity="0.18" />
+                <stop offset="100%" stop-color="#ca8a04" stop-opacity="0.0" />
+              </radialGradient>
+
+              <!-- Bulb Glow Radial Aura Gradient -->
+              <radialGradient id="bulbAuraGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+                <stop offset="25%" stop-color="#fffbeb" stop-opacity="0.95" />
+                <stop offset="55%" stop-color="#fef08a" stop-opacity="0.75" />
+                <stop offset="80%" stop-color="#facc15" stop-opacity="0.35" />
+                <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0" />
+              </radialGradient>
+
+              <!-- Soft Feathery Blurs for Volumetric Light Falloff -->
+              <filter id="softBeamFilter" x="-30%" y="-10%" width="160%" height="120%">
+                <feGaussianBlur stdDeviation="7" />
+              </filter>
+              <filter id="coreBeamFilter" x="-30%" y="-10%" width="160%" height="120%">
+                <feGaussianBlur stdDeviation="3.5" />
+              </filter>
+              <filter id="floorPoolFilter" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="10" />
+              </filter>
+              <filter id="bulbGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="8" />
+              </filter>
+            </defs>
+
+            <!-- ============================================= -->
+            <!-- 0. INTEGRATED VOLUMETRIC LIGHT & FLOOR POOL   -->
+            <!-- (Controlled by body.lamp-is-on with swipe)    -->
+            <!-- ============================================= -->
+            <g id="lampLightGroup">
+              
+              <!-- A. Floor Light Reflection Pool (Grounded on floor at y=590) -->
+              <g id="floorLightPool">
+                <ellipse cx="218" cy="590" rx="175" ry="26" fill="url(#floorPoolGrad)" filter="url(#floorPoolFilter)" />
+                <ellipse cx="218" cy="590" rx="95" ry="14" fill="#fef08a" opacity="0.45" filter="url(#floorPoolFilter)" />
+                <ellipse cx="218" cy="590" rx="45" ry="7" fill="#ffffff" opacity="0.65" />
+              </g>
+
+              <!-- B. Volumetric Light Cone Beam (Smooth Downward Swipe) -->
+              <g id="lightConeBeam">
+                <polygon points="172,178 264,178 405,590 31,590" fill="url(#mainBeamGrad)" filter="url(#softBeamFilter)" />
+                <polygon points="184,178 252,178 340,590 96,590" fill="url(#innerBeamGrad)" filter="url(#coreBeamFilter)" />
+                <polygon points="208,178 228,178 275,590 161,590" fill="url(#innerBeamGrad)" opacity="0.45" />
+              </g>
+
+              <!-- C. Light Bulb & Socket Intense Radiance -->
+              <g id="bulbGlowElement">
+                <ellipse cx="218" cy="180" rx="42" ry="14" fill="url(#bulbAuraGrad)" filter="url(#bulbGlowFilter)" />
+                <ellipse cx="218" cy="179" rx="24" ry="8" fill="#fef08a" opacity="0.95" />
+                <ellipse cx="218" cy="178" rx="12" ry="4" fill="#ffffff" />
+              </g>
+
+              <!-- D. Magical Floating Golden Dust Particles (Inside Light Beam) -->
+              <g id="svgParticles">
+                <circle cx="185" cy="270" r="2.2" fill="#fff" opacity="0.85" class="animate-float-particle" style="animation-duration: 4.2s;" />
+                <circle cx="245" cy="320" r="2.8" fill="#fef08a" opacity="0.9" class="animate-float-particle" style="animation-duration: 5.4s; animation-delay: 0.7s;" />
+                <circle cx="170" cy="380" r="1.8" fill="#facc15" opacity="0.75" class="animate-float-particle" style="animation-duration: 3.9s; animation-delay: 1.4s;" />
+                <circle cx="262" cy="430" r="3.0" fill="#fef08a" opacity="0.85" class="animate-float-particle" style="animation-duration: 6.1s; animation-delay: 0.3s;" />
+                <circle cx="202" cy="480" r="2.4" fill="#fff" opacity="0.8" class="animate-float-particle" style="animation-duration: 4.7s; animation-delay: 2.0s;" />
+                <circle cx="232" cy="530" r="2.0" fill="#fde047" opacity="0.8" class="animate-float-particle" style="animation-duration: 5.0s; animation-delay: 1.0s;" />
+                <circle cx="155" cy="500" r="1.6" fill="#fef08a" opacity="0.7" class="animate-float-particle" style="animation-duration: 4.4s; animation-delay: 1.6s;" />
+                <circle cx="280" cy="510" r="2.2" fill="#facc15" opacity="0.75" class="animate-float-particle" style="animation-duration: 5.2s; animation-delay: 0.5s;" />
+              </g>
+
+            </g>
+
+            <!-- ============================================= -->
+            <!-- 1. LAMP PHYSICAL STRUCTURE (LAYERED IN FRONT) -->
+            <!-- ============================================= -->
+            
+            <!-- Lamp Heavy Weighted Base -->
+            <ellipse cx="218" cy="590" rx="72" ry="14" fill="#0f172a" stroke="#334155" stroke-width="2.5" />
+            <ellipse cx="218" cy="587" rx="64" ry="10" fill="#1e293b" />
+            
+            <!-- Slender Vertical Metallic Rod / Pole -->
+            <rect class="lamp-pole-glow transition-all duration-500" x="215" y="180" width="6" height="408" rx="3" fill="url(#metalGrad)" stroke="#1e293b" stroke-width="1" />
+
+            <!-- Joint Couplings -->
+            <rect x="213" y="380" width="10" height="12" rx="3" fill="#475569" stroke="#1e293b" stroke-width="1" />
+            <rect x="213" y="240" width="10" height="12" rx="3" fill="#475569" stroke="#1e293b" stroke-width="1" />
+
+            <!-- Upper Lamp Shade Arm & Neck -->
+            <path d="M 218 180 L 218 160 Q 218 140 218 135" stroke="#334155" stroke-width="8" stroke-linecap="round" />
+            
+            <!-- Lamp Shade (Dome/Cone Shape) -->
+            <g id="lampShadeGroup" class="cursor-pointer">
+              <!-- Outer Shade -->
+              <path 
+                class="lamp-shade-fill transition-all duration-500" 
+                d="M 172 178 L 195 120 L 241 120 L 264 178 Z" 
+                fill="#1e293b" 
+                stroke="#475569" 
+                stroke-width="2.5" 
+              />
+              <!-- Shade Top Rim Cap -->
+              <ellipse cx="218" cy="120" rx="23" ry="5" fill="#334155" stroke="#475569" stroke-width="1.5" />
+              
+              <!-- Shade Bottom Diffuser Rim -->
+              <ellipse class="shade-rim-fill transition-all duration-500" cx="218" cy="178" rx="46" ry="8" fill="#0f172a" stroke="#475569" stroke-width="2" />
+            </g>
+
+            <!-- ============================================= -->
+            <!-- 2. INTERACTIVE HANGING PULL-CORD / STRING     -->
+            <!-- ============================================= -->
+            <g id="lampPullCord" class="animate-cord-sway cursor-pointer">
+              <!-- Cord Thin Chain -->
+              <line x1="236" y1="184" x2="236" y2="270" stroke="#94a3b8" stroke-width="2" stroke-dasharray="2 3" />
+              <!-- Bottom Weighted Metallic Knob / Bead -->
+              <circle class="cord-knob transition-all duration-200" cx="236" cy="275" r="7" fill="#facc15" stroke="#ca8a04" stroke-width="1.5" />
+              <circle cx="234" cy="273" r="2" fill="#fef08a" />
+              <!-- Expanded Invisible Hitbox for effortless clicks -->
+              <circle cx="236" cy="275" r="32" fill="transparent" class="cursor-pointer" />
+            </g>
+
+          </svg>
+
+          <!-- Extra Overlay Click Hitbox for older touch devices -->
+          <button 
+            type="button" 
+            id="pullCordClickTarget" 
+            aria-label="Toggle Floor Lamp"
+            class="absolute top-[250px] left-[215px] w-14 h-16 cursor-pointer focus:outline-none z-30 opacity-0"
+            title="Click or pull to turn lamp on/off"
+          ></button>
+
+        </div>
+
+      </div>
+
+      <!-- ============================================== -->
+      <!-- RIGHT SIDE: DARK-THEMED LOGIN CARD -->
+      <!-- ============================================== -->
+      <div class="lg:col-span-7 flex items-center justify-center">
+        
+        <div id="loginCardContainer" class="w-full max-w-md mx-auto">
+          
+          <div class="login-card-glass rounded-3xl p-6 sm:p-9 space-y-6 relative overflow-hidden">
+            
+            <!-- Card Header -->
+            <div class="text-left space-y-1.5">
+              <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-[11px] font-mono font-medium mb-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
+                <span>AUTHENTICATION</span>
+              </div>
+              <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Welcome Back</h1>
+              <p class="text-xs text-slate-400">Enter your details to access your account</p>
+            </div>
+
+            <!-- Dynamic Alert Message Banner -->
+            <div id="authAlert" class="hidden rounded-xl p-3.5 text-xs font-medium border flex items-start space-x-3 transition-all duration-300">
+              <i id="authAlertIcon" data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+              <span id="authAlertMsg" class="flex-1 leading-relaxed"></span>
+            </div>
+
+            <!-- Login Form -->
+            <form id="lampLoginForm" class="space-y-4" novalidate>
+              
+              <!-- 1. Username Input -->
+              <div class="input-wrapper">
+                <label for="lampUsername" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Username</label>
+                <div class="relative">
+                  <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-200"></i>
+                  <input 
+                    type="text" 
+                    id="lampUsername" 
+                    required 
+                    autocomplete="username" 
+                    placeholder="e.g. demo" 
+                    class="lamp-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-slate-100 placeholder-slate-500 font-sans"
+                  />
+                </div>
+              </div>
+
+              <!-- 2. Email Address Input -->
+              <div class="input-wrapper">
+                <label for="lampEmail" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Email Address</label>
+                <div class="relative">
+                  <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-200"></i>
+                  <input 
+                    type="email" 
+                    id="lampEmail" 
+                    placeholder="name@example.com (optional)" 
+                    class="lamp-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-slate-100 placeholder-slate-500 font-sans"
+                  />
+                </div>
+              </div>
+
+              <!-- 3. Password Input -->
+              <div class="input-wrapper">
+                <label for="lampPassword" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Password</label>
+                <div class="relative">
+                  <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-200"></i>
+                  <input 
+                    type="password" 
+                    id="lampPassword" 
+                    required 
+                    autocomplete="current-password" 
+                    placeholder="••••••••" 
+                    class="lamp-input w-full pl-10 pr-10 py-2.5 rounded-xl text-sm text-slate-100 placeholder-slate-500 font-sans"
+                  />
+                  <button 
+                    type="button" 
+                    id="toggleLampPasswordBtn" 
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-yellow-400 focus:outline-none p-1.5 rounded-lg hover:bg-slate-800/60 transition active:scale-90"
+                    title="Toggle password visibility"
+                  >
+                    <i data-lucide="eye" class="w-4 h-4 transition-transform duration-200"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Bright Yellow Sign In Button -->
+              <div class="pt-2">
+                <button 
+                  type="submit" 
+                  id="lampSubmitBtn" 
+                  class="ripple-btn w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl font-bold text-sm text-slate-950 bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-300 hover:to-amber-300 shadow-xl shadow-yellow-500/25 transition-all duration-200 active:scale-95 hover:-translate-y-0.5"
+                >
+                  <i data-lucide="log-in" class="w-4 h-4"></i>
+                  <span>Sign In</span>
+                </button>
+              </div>
+
+              <!-- Quick 1-Click Demo Shortcut -->
+              <div class="pt-1">
+                <button 
+                  type="button" 
+                  id="lampQuickDemoBtn" 
+                  class="ripple-btn w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs font-mono font-medium text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20 border border-yellow-400/20 transition-all duration-200 active:scale-95 hover:border-yellow-400/40"
+                >
+                  <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                  <span>Use Demo Account (demo / password123)</span>
+                </button>
+              </div>
+
+            </form>
+
+            <!-- Divider: OR CONTINUE WITH -->
+            <div class="relative flex items-center justify-center py-2">
+              <div class="border-t border-slate-800 w-full"></div>
+              <span class="bg-[#0e1423] px-3 text-[10px] font-mono text-slate-500 uppercase tracking-widest whitespace-nowrap absolute">OR CONTINUE WITH</span>
+            </div>
+
+            <!-- Two Social Login Buttons Side-by-Side (Google and GitHub) -->
+            <div class="grid grid-cols-2 gap-3 pt-1">
+              
+              <!-- Google Button -->
+              <button 
+                type="button" 
+                class="social-btn ripple-btn flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60 text-xs font-semibold text-slate-200 transition-all duration-200 active:scale-95 hover:border-slate-600"
+              >
+                <!-- Google SVG Icon -->
+                <svg class="w-4 h-4" viewBox="0 0 24 24">
+                  <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
+                  <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+                  <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 12s.7 2.3 1.9 4.7l3.7-1.9z"/>
+                  <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/>
+                </svg>
+                <span>Google</span>
+              </button>
+
+              <!-- GitHub Button -->
+              <button 
+                type="button" 
+                class="social-btn ripple-btn flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60 text-xs font-semibold text-slate-200 transition-all duration-200 active:scale-95 hover:border-slate-600"
+              >
+                <!-- GitHub SVG Icon -->
+                <svg class="w-4 h-4 fill-white" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                </svg>
+                <span>GitHub</span>
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ============================================== -->
+  <!-- SUCCESS ANIMATION OVERLAY MODAL -->
+  <!-- ============================================== -->
+  <div 
+    id="successAnimationOverlay" 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300"
+  >
+    <div 
+      id="successModalCard" 
+      class="login-card-glass rounded-3xl p-8 max-w-sm w-full text-center space-y-5 border border-yellow-400/50 shadow-2xl shadow-yellow-500/20 transform scale-75 opacity-0 transition-all duration-500 ease-out"
+    >
+      
+      <!-- Glowing Animated Success Circle with Yellow/Amber Accent -->
+      <div class="relative mx-auto w-24 h-24 flex items-center justify-center">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400/25"></span>
+        <span class="absolute inline-flex rounded-full h-20 w-20 bg-yellow-500/20 border border-yellow-400/40"></span>
+        
+        <div id="successCheckBadge" class="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-400 via-amber-400 to-yellow-300 flex items-center justify-center shadow-xl shadow-yellow-500/50 transform scale-0 animate-pop-in">
+          <i data-lucide="check" class="w-9 h-9 text-slate-950 stroke-[3.5]"></i>
+        </div>
+      </div>
+
+      <!-- Success Details -->
+      <div class="space-y-1.5">
+        <h3 id="successTitle" class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Login Successful!</h3>
+        <p id="successMessage" class="text-xs font-mono text-yellow-400">Welcome back, <span id="successUsernameSpan" class="font-bold">demo</span></p>
+        <p class="text-[11px] text-slate-400">Authenticated securely • Launching dashboard...</p>
+      </div>
+
+      <!-- 1.5 Second Visual Progress Bar -->
+      <div class="w-full bg-slate-900/90 h-1.5 rounded-full overflow-hidden border border-slate-800">
+        <div id="successRedirectProgressBar" class="h-full bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-200 w-0 transition-all duration-[1500ms] ease-linear"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- STRICT FOOTER: ONLY 'developed by badhon' -->
+  <footer class="py-6 text-center text-xs text-slate-500 font-mono relative z-20">
+    developed by badhon
+  </footer>
+
+  <!-- Client-side Logic Script -->
+  <script src="script.js"></script>
+</body>
+</html>

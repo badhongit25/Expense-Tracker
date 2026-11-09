@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In - Trackr// Authentication</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#080c14',
+              surface: '#0f172a',
+              card: '#131e33',
+              border: '#1e293b',
+              accent: '#38bdf8',
+              emerald: '#10b981',
+              violet: '#8b5cf6'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Fira Code"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg-deep: #080c14;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-deep);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+    .bg-grid-pattern {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px -5px rgba(56, 189, 248, 0.05);
+    }
+    .input-field {
+      background: rgba(11, 17, 32, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      transition: all 0.2s ease;
+    }
+    .input-field:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+      outline: none;
+      background: rgba(15, 23, 42, 0.95);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-brand-dark text-slate-100 flex items-center justify-center p-4 sm:p-6 bg-grid-pattern relative">
+
+  <!-- Glow Accents in Background -->
+  <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="w-full max-w-md relative z-10">
+
+    <!-- Brand Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center space-x-3 mb-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-600 to-violet-600 flex items-center justify-center font-bold text-white shadow-xl shadow-sky-500/25">
+          <i data-lucide="compass" class="w-6 h-6 text-white"></i>
+        </div>
+        <div class="text-left">
+          <div class="flex items-center space-x-1">
+            <span class="font-extrabold tracking-tight text-2xl text-white">Trackr</span>
+            <span class="font-mono text-sky-400 font-bold text-lg">//</span>
+          </div>
+          <span class="text-[11px] font-mono text-slate-400 tracking-wider">DEV_PULSE v2.4</span>
+        </div>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-white mt-2">Welcome Back</h1>
+      <p class="text-sm text-slate-400 mt-1">Sign in with your credentials to enter your dashboard</p>
+    </div>
+
+    <!-- Login Glass Card -->
+    <div class="glass-card rounded-2xl p-6 sm:p-8 space-y-6">
+
+      <!-- Alert Box -->
+      <div id="alertBox" class="hidden rounded-xl p-3.5 text-xs font-medium border flex items-start space-x-3 transition-all duration-200">
+        <i id="alertIcon" data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+        <div id="alertMsg" class="flex-1"></div>
+      </div>
+
+      <!-- Quick Demo Login Button -->
+      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2 text-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-slate-300 font-mono">Demo: <strong class="text-white">demo</strong> / <span class="text-slate-400">password123</span></span>
+        </div>
+        <button type="button" id="fillDemoBtn" class="px-2.5 py-1 text-xs font-mono font-medium rounded-lg bg-sky-500/15 text-sky-400 hover:bg-sky-500/25 border border-sky-500/30 transition">
+          Auto Fill
+        </button>
+      </div>
+
+      <form id="loginForm" class="space-y-4" novalidate>
+        
+        <!-- Username Field -->
+        <div>
+          <label for="username" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
+            Username
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <i data-lucide="user" class="w-4 h-4"></i>
+            </div>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              required
+              autocomplete="username"
+              placeholder="e.g. demo"
+              class="input-field w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-slate-500"
+            />
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="password" class="block text-xs font-mono uppercase tracking-wider text-slate-300">
+              Password
+            </label>
+          </div>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <i data-lucide="lock" class="w-4 h-4"></i>
+            </div>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              autocomplete="current-password"
+              placeholder="••••••••"
+              class="input-field w-full pl-10 pr-10 py-2.5 rounded-xl text-sm text-white placeholder-slate-500"
+            />
+            <button
+              type="button"
+              id="togglePasswordBtn"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200 transition"
+              tabindex="-1"
+              title="Toggle password visibility"
+            >
+              <i id="eyeIcon" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          id="submitBtn"
+          class="w-full mt-2 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-sky-500 via-indigo-600 to-violet-600 hover:from-sky-400 hover:to-indigo-500 shadow-lg shadow-sky-500/25 transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0"
+        >
+          <span id="btnText">Sign In</span>
+          <i id="btnIcon" data-lucide="arrow-right" class="w-4 h-4"></i>
+          <svg id="btnSpinner" class="hidden animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+        </button>
+      </form>
+
+      <!-- Bottom Separator & Register Link -->
+      <div class="pt-4 border-t border-slate-800/80 text-center">
+        <p class="text-xs text-slate-400">
+          Don't have an account yet? 
+          <a href="/register" class="text-sky-400 hover:text-sky-300 font-semibold transition hover:underline">
+            Create an account
+          </a>
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Security Footnote -->
+    <div class="mt-6 text-center text-slate-400 text-xs font-mono flex items-center justify-center space-x-2">
+      <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+      <span>Protected by Express-Session & Bcrypt Encryption</span>
+    </div>
+
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    const loginForm = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const eyeIcon = document.getElementById('eyeIcon');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnIcon = document.getElementById('btnIcon');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const alertBox = document.getElementById('alertBox');
+    const alertMsg = document.getElementById('alertMsg');
+    const alertIcon = document.getElementById('alertIcon');
+    const fillDemoBtn = document.getElementById('fillDemoBtn');
+
+    // Auto-fill demo account
+    fillDemoBtn.addEventListener('click', () => {
+      usernameInput.value = 'demo';
+      passwordInput.value = 'password123';
+      showAlert('Demo credentials filled! Click "Sign In" or press Enter.', 'info');
+      passwordInput.focus();
+    });
+
+    // Toggle password visibility
+    togglePasswordBtn.addEventListener('click', () => {
+      const isPassword = passwordInput.getAttribute('type') === 'password';
+      passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+      eyeIcon.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
+      lucide.createIcons();
+    });
+
+    // Handle Form Submit
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!username) {
+        showAlert('Please enter your username.', 'error');
+        usernameInput.focus();
+        return;
+      }
+
+      if (!password) {
+        showAlert('Please enter your password.', 'error');
+        passwordInput.focus();
+        return;
+      }
+
+      // Set Loading State
+      setLoading(true);
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          showAlert(`Welcome back, ${data.user.username}! Redirecting to dashboard...`, 'success');
+          // Redirect to dashboard
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 600);
+        } else {
+          showAlert(data.message || 'Invalid username or password.', 'error');
+          setLoading(false);
+        }
+      } catch (err) {
+        showAlert('Unable to connect to server. Please ensure the backend is running.', 'error');
+        setLoading(false);
+      }
+    });
+
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      if (isLoading) {
+        btnText.textContent = 'Verifying...';
+        btnIcon.classList.add('hidden');
+        btnSpinner.classList.remove('hidden');
+      } else {
+        btnText.textContent = 'Sign In';
+        btnIcon.classList.remove('hidden');
+        btnSpinner.classList.add('hidden');
+      }
+    }
+
+    function showAlert(message, type = 'error') {
+      alertBox.classList.remove('hidden', 'bg-rose-950/70', 'border-rose-500/40', 'text-rose-200', 'bg-emerald-950/70', 'border-emerald-500/40', 'text-emerald-200', 'bg-sky-950/70', 'border-sky-500/40', 'text-sky-200');
+      alertMsg.textContent = message;
+
+      if (type === 'error') {
+        alertBox.classList.add('bg-rose-950/70', 'border-rose-500/40', 'text-rose-200');
+        alertIcon.setAttribute('data-lucide', 'alert-circle');
+      } else if (type === 'success') {
+        alertBox.classList.add('bg-emerald-950/70', 'border-emerald-500/40', 'text-emerald-200');
+        alertIcon.setAttribute('data-lucide', 'check-circle-2');
+      } else {
+        alertBox.classList.add('bg-sky-950/70', 'border-sky-500/40', 'text-sky-200');
+        alertIcon.setAttribute('data-lucide', 'info');
+      }
+      lucide.createIcons();
+    }
+
+    function hideAlert() {
+      alertBox.classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

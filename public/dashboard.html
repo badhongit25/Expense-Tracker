@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Expense Tracker</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#080c14',
+              surface: '#0f172a',
+              card: '#131e33',
+              border: '#1e293b',
+              accent: '#38bdf8',
+              emerald: '#10b981',
+              violet: '#8b5cf6',
+              amber: '#f59e0b',
+              rose: '#f43f5e'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Fira Code"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg-deep: #080c14;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-deep);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.10) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.10) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+        radial-gradient(at 20% 80%, rgba(245, 158, 11, 0.05) 0px, transparent 40%);
+      background-attachment: fixed;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .bg-grid-pattern {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+
+    /* Ultra-sleek Glassmorphism Base Cards */
+    .glass-card {
+      background: rgba(13, 19, 35, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 
+        0 20px 45px -15px rgba(0, 0, 0, 0.7),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 0.08);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-card-premium {
+      background: rgba(13, 19, 35, 0.82);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      box-shadow: 
+        0 25px 50px -15px rgba(0, 0, 0, 0.75),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 0.10);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-card-premium:hover {
+      box-shadow: 
+        0 30px 60px -12px rgba(0, 0, 0, 0.85),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    /* Distinct Vibrant Color Themes for KPI Glass Cards */
+    .glass-kpi-cyan {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.16) 0%, rgba(15, 23, 42, 0.84) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      box-shadow: 0 15px 35px -10px rgba(14, 165, 233, 0.22), inset 0 1px 1px 0 rgba(56, 189, 248, 0.25);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-kpi-cyan:hover {
+      border-color: rgba(56, 189, 248, 0.65);
+      box-shadow: 0 20px 45px -8px rgba(14, 165, 233, 0.40), inset 0 1px 1px 0 rgba(56, 189, 248, 0.40);
+      transform: translateY(-4px);
+    }
+
+    .glass-kpi-emerald {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.84) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.28);
+      box-shadow: 0 15px 35px -10px rgba(16, 185, 129, 0.22), inset 0 1px 1px 0 rgba(16, 185, 129, 0.25);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-kpi-emerald:hover {
+      border-color: rgba(16, 185, 129, 0.65);
+      box-shadow: 0 20px 45px -8px rgba(16, 185, 129, 0.40), inset 0 1px 1px 0 rgba(16, 185, 129, 0.40);
+      transform: translateY(-4px);
+    }
+
+    .glass-kpi-violet {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.16) 0%, rgba(15, 23, 42, 0.84) 100%);
+      border: 1px solid rgba(139, 92, 246, 0.28);
+      box-shadow: 0 15px 35px -10px rgba(139, 92, 246, 0.22), inset 0 1px 1px 0 rgba(139, 92, 246, 0.25);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-kpi-violet:hover {
+      border-color: rgba(139, 92, 246, 0.65);
+      box-shadow: 0 20px 45px -8px rgba(139, 92, 246, 0.40), inset 0 1px 1px 0 rgba(139, 92, 246, 0.40);
+      transform: translateY(-4px);
+    }
+
+    .glass-kpi-amber {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(15, 23, 42, 0.84) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.28);
+      box-shadow: 0 15px 35px -10px rgba(245, 158, 11, 0.22), inset 0 1px 1px 0 rgba(245, 158, 11, 0.25);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-kpi-amber:hover {
+      border-color: rgba(245, 158, 11, 0.65);
+      box-shadow: 0 20px 45px -8px rgba(245, 158, 11, 0.40), inset 0 1px 1px 0 rgba(245, 158, 11, 0.40);
+      transform: translateY(-4px);
+    }
+
+    /* Active KPI Selection Outline */
+    .kpi-card-active {
+      transform: scale(1.02) !important;
+      outline: 2px solid #38bdf8;
+      outline-offset: 3px;
+    }
+    .kpi-card-active.glass-kpi-emerald {
+      outline-color: #10b981;
+    }
+    .kpi-card-active.glass-kpi-violet {
+      outline-color: #8b5cf6;
+    }
+    .kpi-card-active.glass-kpi-amber {
+      outline-color: #f59e0b;
+    }
+
+    /* Section Entrance Transitions (Slide up + unblur) */
+    .view-section-animated {
+      animation: sectionReveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes sectionReveal {
+      0% {
+        opacity: 0;
+        transform: translateY(24px) scale(0.98);
+        filter: blur(6px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+      }
+    }
+
+    /* Table row hover micro-interaction */
+    .table-row-hover {
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .table-row-hover:hover {
+      background: rgba(30, 41, 59, 0.55) !important;
+      transform: translateX(4px);
+    }
+
+    /* Glass inputs */
+    .glass-input {
+      background: rgba(11, 17, 32, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
+      transition: all 0.2s ease;
+    }
+    .glass-input:focus {
+      background: rgba(15, 23, 42, 0.95);
+      border-color: #38bdf8;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    /* Ripple micro-interaction */
+    .ripple-btn {
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+    .btn-ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: rippleAnim 600ms linear;
+      background-color: rgba(255, 255, 255, 0.35);
+      pointer-events: none;
+    }
+    @keyframes rippleAnim {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="bg-brand-dark bg-grid-pattern flex flex-col min-h-screen">
+
+  <!-- Ambient Glow -->
+  <div class="fixed top-0 left-1/4 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+  <div class="fixed top-1/2 right-10 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+  <!-- Top Navbar -->
+  <header class="sticky top-0 z-40 w-full glass-card border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-3 cursor-pointer" id="navLogoBtn">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-600 to-violet-600 flex items-center justify-center font-bold text-white shadow-lg shadow-sky-500/20">
+          <i data-lucide="wallet" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <span class="font-extrabold tracking-tight text-xl text-white">Expense<span class="font-mono text-sky-400">//</span>Tracker</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs & Actions -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        
+        <!-- Tab Switcher (Dashboard, Calendar, Profile with Smooth Animated Switch) -->
+        <nav class="flex p-1 bg-slate-900/90 border border-slate-800 rounded-xl text-xs font-medium space-x-1">
+          <button id="tabDashboardBtn" class="tab-nav-btn ripple-btn flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold transition-all duration-300 shadow-md shadow-sky-500/25 active:scale-95">
+            <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Dashboard</span>
+          </button>
+          <button id="tabCalendarBtn" class="tab-nav-btn ripple-btn flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-all duration-300 active:scale-95">
+            <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Calendar</span>
+          </button>
+          <button id="tabProfileBtn" class="tab-nav-btn ripple-btn flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-all duration-300 active:scale-95">
+            <i data-lucide="user" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">My Profile</span>
+          </button>
+        </nav>
+
+        <!-- Add Expense Quick Button -->
+        <button id="openAddModalBtn" class="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 shadow-lg shadow-sky-500/20 transition hover:-translate-y-0.5 active:translate-y-0">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Add Expense</span>
+        </button>
+
+        <!-- User Profile Quick Click -->
+        <div class="flex items-center space-x-2 pl-2 border-l border-slate-800">
+          <button id="quickProfileBtn" class="flex items-center space-x-2 p-1 rounded-xl hover:bg-slate-800/80 transition" title="View Profile">
+            <div id="userAvatar" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 border border-sky-400/40 flex items-center justify-center text-xs font-mono font-bold text-white shadow-md">
+              U
+            </div>
+            <span id="navUsername" class="hidden md:inline text-xs font-mono text-slate-300">user</span>
+          </button>
+
+          <button id="logoutBtn" title="Log Out" class="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+
+    <!-- ============================================== -->
+    <!-- SECTION 1: DASHBOARD OVERVIEW VIEW -->
+    <!-- ============================================== -->
+    <div id="dashboardViewSection" class="space-y-6">
+
+      <!-- KPI Metric Cards Grid (Interactive Colorful Glass Cards) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Card 1: Total All-time Expenses (Cyan Theme) -->
+        <div id="kpiCardTotal" class="glass-kpi-cyan rounded-2xl p-5 relative overflow-hidden group cursor-pointer ripple-btn active:scale-95 transition-all duration-300 select-none" title="Click to view all-time expenses">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono uppercase tracking-wider text-sky-300/90 font-medium">Total Expenses</span>
+            <div class="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 shadow-sm shadow-sky-500/20 group-hover:scale-110 transition-transform">
+              <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <span id="kpiTotalAll" class="text-2xl sm:text-3xl font-mono font-extrabold text-white tracking-tight">৳0.00</span>
+          </div>
+          <div class="mt-1 flex items-center justify-between text-[11px] text-sky-200/70 font-mono">
+            <span id="kpiTotalCount">0 records recorded</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity text-sky-400 font-semibold text-[10px]">All Records →</span>
+          </div>
+          <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-sky-500/15 rounded-full blur-xl group-hover:bg-sky-500/25 transition"></div>
+        </div>
+
+        <!-- Card 2: This Month's Expenses (Emerald Theme) -->
+        <div id="kpiCardMonth" class="glass-kpi-emerald rounded-2xl p-5 relative overflow-hidden group cursor-pointer ripple-btn active:scale-95 transition-all duration-300 select-none" title="Click to filter by current month">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono uppercase tracking-wider text-emerald-300/90 font-medium">This Month</span>
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-sm shadow-emerald-500/20 group-hover:scale-110 transition-transform">
+              <i data-lucide="calendar-days" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <span id="kpiThisMonth" class="text-2xl sm:text-3xl font-mono font-extrabold text-emerald-400 tracking-tight">৳0.00</span>
+          </div>
+          <div class="mt-1 flex items-center justify-between text-[11px] text-emerald-200/70 font-mono">
+            <span id="kpiMonthLabel">Current Month</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity text-emerald-400 font-semibold text-[10px]">Filter Month →</span>
+          </div>
+          <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-emerald-500/15 rounded-full blur-xl group-hover:bg-emerald-500/25 transition"></div>
+        </div>
+
+        <!-- Card 3: Today's Expenses (Violet Theme) -->
+        <div id="kpiCardToday" class="glass-kpi-violet rounded-2xl p-5 relative overflow-hidden group cursor-pointer ripple-btn active:scale-95 transition-all duration-300 select-none" title="Click to filter today's expenses">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono uppercase tracking-wider text-violet-300/90 font-medium">Today's Spending</span>
+            <div class="w-8 h-8 rounded-xl bg-violet-500/20 border border-violet-400/40 flex items-center justify-center text-violet-300 shadow-sm shadow-violet-500/20 group-hover:scale-110 transition-transform">
+              <i data-lucide="clock" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <span id="kpiToday" class="text-2xl sm:text-3xl font-mono font-extrabold text-violet-300 tracking-tight">৳0.00</span>
+          </div>
+          <div class="mt-1 flex items-center justify-between text-[11px] text-violet-200/70 font-mono">
+            <span id="kpiTodayCount">0 transactions today</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity text-violet-400 font-semibold text-[10px]">Filter Today →</span>
+          </div>
+          <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-violet-500/15 rounded-full blur-xl group-hover:bg-violet-500/25 transition"></div>
+        </div>
+
+        <!-- Card 4: Selected Period Breakdown (Amber Theme) -->
+        <div id="kpiCardFiltered" class="glass-kpi-amber rounded-2xl p-5 relative overflow-hidden group cursor-pointer ripple-btn active:scale-95 transition-all duration-300 select-none" title="Click to focus filters">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono uppercase tracking-wider text-amber-300/90 font-medium">Selected Period</span>
+            <div class="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-sm shadow-amber-500/20 group-hover:scale-110 transition-transform">
+              <i data-lucide="layers" class="w-4 h-4"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <span id="kpiFilteredTotal" class="text-2xl sm:text-3xl font-mono font-extrabold text-amber-300 tracking-tight">৳0.00</span>
+          </div>
+          <div class="mt-1 flex items-center justify-between text-[11px] text-amber-200/70 font-mono">
+            <span id="kpiFilteredCount">0 transactions</span>
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity text-amber-400 font-semibold text-[10px]">Custom Filters →</span>
+          </div>
+          <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-amber-500/15 rounded-full blur-xl group-hover:bg-amber-500/25 transition"></div>
+        </div>
+
+      </div>
+      
+      <!-- Charts Grid (Vivid Colored Glass Cards) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Category Doughnut Chart (5 Cols - Cyan/Indigo Accent) -->
+        <div class="glass-card-premium rounded-2xl p-6 lg:col-span-5 flex flex-col justify-between border-t-2 border-t-sky-500/60 hover:border-sky-500/40 transition-all duration-300">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-800/80">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-7 h-7 rounded-lg bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400">
+                <i data-lucide="pie-chart" class="w-4 h-4"></i>
+              </div>
+              <h2 class="text-sm font-bold text-white uppercase tracking-wider">Category Breakdown</h2>
+            </div>
+            <span class="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/20">Distribution</span>
+          </div>
+
+          <!-- Chart Area with Center Overlay -->
+          <div class="relative py-6 flex items-center justify-center min-h-[280px]">
+            <canvas id="categoryChart" class="max-w-[260px] max-h-[260px]"></canvas>
+            <div id="chartCenterText" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span class="text-xs font-mono text-slate-400 uppercase">Filtered Total</span>
+              <span id="chartCenterTotal" class="text-lg font-mono font-bold text-white">৳0.00</span>
+            </div>
+          </div>
+
+          <!-- Category Legend Container -->
+          <div id="categoryLegendList" class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-xs font-mono">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Right: 6-Month Monthly Trend Bar Chart (7 Cols - Emerald/Teal Accent) -->
+        <div class="glass-card-premium rounded-2xl p-6 lg:col-span-7 flex flex-col justify-between border-t-2 border-t-emerald-500/60 hover:border-emerald-500/40 transition-all duration-300">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-800/80">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+                <i data-lucide="trending-up" class="w-4 h-4"></i>
+              </div>
+              <h2 class="text-sm font-bold text-white uppercase tracking-wider">6-Month Spending Trends</h2>
+            </div>
+            <span class="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Monthly</span>
+          </div>
+
+          <div class="relative py-4 flex-1 min-h-[280px] flex items-center">
+            <canvas id="trendChart" class="w-full h-full"></canvas>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono text-slate-400">
+            <span>Aggregated across previous 6 calendar months</span>
+            <span class="text-emerald-400 font-semibold">Live Metrics</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Expense Management Table Section (Deep Indigo Glass Card) -->
+      <div class="glass-card-premium rounded-2xl p-6 space-y-4 border-t-2 border-t-indigo-500/60">
+        
+        <!-- Active Filter Indicator Pill (Shown when quick KPI filter is active) -->
+        <div id="activeFilterPillBar" class="hidden flex items-center space-x-2 py-2 px-3.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs font-mono text-slate-200">
+          <i data-lucide="filter" class="w-3.5 h-3.5 text-sky-400"></i>
+          <span>Active filter: <strong id="activeFilterPillLabel" class="text-sky-300">All Records</strong></span>
+          <button id="clearQuickFilterBtn" class="ml-auto text-rose-400 hover:text-rose-300 font-semibold text-[11px] flex items-center space-x-1 hover:underline p-1">
+            <span>Reset filter</span>
+            <i data-lucide="x" class="w-3 h-3"></i>
+          </button>
+        </div>
+        
+        <!-- Table Header & Controls -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center space-x-2">
+              <i data-lucide="receipt" class="w-4 h-4 text-sky-400"></i>
+              <span>Expense Management & History</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Add, edit, filter, or remove daily transactions</p>
+          </div>
+
+          <!-- Filter Controls Toolbar -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            
+            <!-- Search Input -->
+            <div class="relative">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              <input 
+                type="text" 
+                id="searchExpensesInput" 
+                placeholder="Search description..." 
+                class="glass-input pl-8 pr-3 py-1.5 rounded-xl text-xs w-40 sm:w-48 placeholder-slate-500"
+              />
+            </div>
+
+            <!-- Category Filter -->
+            <select id="filterCategorySelect" class="glass-input px-3 py-1.5 rounded-xl text-xs bg-slate-900 text-slate-200">
+              <option value="all">All Categories</option>
+              <option value="Food & Dining">Food & Dining</option>
+              <option value="Transportation">Transportation</option>
+              <option value="Groceries">Groceries</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Utilities">Utilities</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Health & Fitness">Health & Fitness</option>
+              <option value="Others">Others</option>
+            </select>
+
+            <!-- Month Filter -->
+            <select id="filterMonthSelect" class="glass-input px-3 py-1.5 rounded-xl text-xs bg-slate-900 text-slate-200">
+              <option value="all">All Time</option>
+            </select>
+
+            <!-- Add Expense Button -->
+            <button id="tableAddExpenseBtn" class="flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-white bg-sky-500 hover:bg-sky-400 transition shadow">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>New</span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 font-mono uppercase tracking-wider">
+                <th class="py-3 px-3">Date</th>
+                <th class="py-3 px-3">Category</th>
+                <th class="py-3 px-3">Description</th>
+                <th class="py-3 px-3 text-right">Amount</th>
+                <th class="py-3 px-3 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="expensesTableBody" class="divide-y divide-slate-800/60 font-sans">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div id="expensesEmptyState" class="hidden py-12 text-center space-y-3">
+          <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-500">
+            <i data-lucide="inbox" class="w-6 h-6"></i>
+          </div>
+          <p class="text-sm text-slate-400 font-medium">No expense records found matching criteria</p>
+          <button id="emptyStateAddBtn" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 transition">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Add an Expense</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ============================================== -->
+    <!-- SECTION 2: INTERACTIVE CALENDAR VIEW -->
+    <!-- ============================================== -->
+    <div id="calendarViewSection" class="hidden space-y-6">
+      
+      <div class="glass-card-premium rounded-2xl p-6 space-y-6 border-t-2 border-t-emerald-500/60">
+        
+        <!-- Calendar Controls & Navigation Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center space-x-2">
+              <i data-lucide="calendar" class="w-4 h-4 text-sky-400"></i>
+              <span>Monthly Spending History Calendar</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Click any date to view itemized expenses or log a new transaction</p>
+          </div>
+
+          <!-- Month Navigators -->
+          <div class="flex items-center space-x-2">
+            <button id="calPrevMonthBtn" class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition">
+              <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+            <div id="calMonthDisplay" class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono font-bold text-white min-w-[140px] text-center">
+              November 2026
+            </div>
+            <button id="calNextMonthBtn" class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition">
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+            <button id="calTodayBtn" class="px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 hover:bg-sky-500/20 text-xs font-mono font-semibold transition">
+              Today
+            </button>
+          </div>
+        </div>
+
+        <!-- Days of Week Header -->
+        <div class="grid grid-cols-7 gap-2 text-center text-xs font-mono font-semibold text-slate-400 uppercase tracking-wider">
+          <div class="py-1 text-rose-400/80">Sun</div>
+          <div class="py-1">Mon</div>
+          <div class="py-1">Tue</div>
+          <div class="py-1">Wed</div>
+          <div class="py-1">Thu</div>
+          <div class="py-1">Fri</div>
+          <div class="py-1 text-sky-400/80">Sat</div>
+        </div>
+
+        <!-- Calendar Days Grid (42 Cells) -->
+        <div id="calendarDaysGrid" class="grid grid-cols-7 gap-2">
+          <!-- Dynamically populated with day cells -->
+        </div>
+
+        <!-- Calendar Legend & Help -->
+        <div class="pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-xs text-slate-400 font-mono gap-3">
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              <span>Low Spending (&lt; ৳500)</span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+              <span>Medium (৳500 - ৳1500)</span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
+              <span>High (&gt; ৳1500)</span>
+            </div>
+          </div>
+          <div>Click any date cell for complete daily transactions</div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ============================================== -->
+    <!-- SECTION 3: USER PROFILE & SETTINGS VIEW -->
+    <!-- ============================================== -->
+    <div id="profileViewSection" class="hidden space-y-6">
+
+      <!-- Profile Header Summary Card -->
+      <div class="glass-card-premium rounded-2xl p-6 sm:p-8 relative overflow-hidden border-t-2 border-t-violet-500/60">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-slate-800/80">
+          
+          <div class="flex items-center space-x-4 sm:space-x-5">
+            <!-- Big Avatar with Glow -->
+            <div id="profileBigAvatar" class="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-600 to-violet-600 flex items-center justify-center text-3xl font-mono font-extrabold text-white shadow-xl shadow-sky-500/25 border-2 border-white/10 flex-shrink-0">
+              B
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center space-x-2 flex-wrap">
+                <h2 id="profileDisplayFullName" class="text-xl sm:text-2xl font-extrabold text-white">Badhon Paul</h2>
+                <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-semibold">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>Active Member</span>
+                </span>
+              </div>
+              <div class="flex items-center space-x-3 text-xs font-mono text-slate-400">
+                <span id="profileDisplayUsername">@demo</span>
+                <span>•</span>
+                <span id="profileDisplayEmail" class="text-sky-400">badhon@expensetracker.local</span>
+              </div>
+              <div class="text-[11px] font-mono text-slate-500 flex items-center space-x-1 mt-1">
+                <i data-lucide="calendar" class="w-3 h-3 text-slate-500"></i>
+                <span id="profileMemberSince">Member since November 2026</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="flex items-center space-x-2 self-start sm:self-center">
+            <button id="profileLogoutBtn" class="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+              <span>Log Out</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Profile KPI Counter Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80">
+            <span class="text-xs font-mono uppercase text-slate-400">Lifetime Expenses</span>
+            <div id="profileStatTotal" class="text-xl sm:text-2xl font-mono font-bold text-white mt-1">৳0.00</div>
+            <div class="text-[11px] text-slate-500 font-mono mt-0.5">Total across all records</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80">
+            <span class="text-xs font-mono uppercase text-slate-400">Total Transactions</span>
+            <div id="profileStatCount" class="text-xl sm:text-2xl font-mono font-bold text-sky-400 mt-1">0 records</div>
+            <div class="text-[11px] text-slate-500 font-mono mt-0.5">Logged in database</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80">
+            <span class="text-xs font-mono uppercase text-slate-400">This Month Spending</span>
+            <div id="profileStatThisMonth" class="text-xl sm:text-2xl font-mono font-bold text-emerald-400 mt-1">৳0.00</div>
+            <div class="text-[11px] text-slate-500 font-mono mt-0.5">Current billing cycle</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Monthly Budget Tracking Card -->
+      <div class="glass-card-premium rounded-2xl p-6 space-y-4 border-t-2 border-t-amber-500/60">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <i data-lucide="target" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Monthly Budget Target</h3>
+              <p class="text-xs text-slate-400">Keep your monthly spending disciplined and in control</p>
+            </div>
+          </div>
+          <span id="budgetPercentBadge" class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            0% Utilized
+          </span>
+        </div>
+
+        <!-- Budget Visual Meter -->
+        <div class="space-y-2">
+          <div class="w-full bg-slate-900 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-800">
+            <div id="budgetProgressBar" class="h-full rounded-full bg-gradient-to-r from-emerald-500 via-sky-500 to-indigo-500 transition-all duration-500" style="width: 0%"></div>
+          </div>
+          
+          <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+            <span>Spent: <strong id="budgetSpentText" class="text-white">৳0.00</strong></span>
+            <span>Monthly Target: <strong id="budgetTargetText" class="text-sky-400">৳0.00</strong></span>
+            <span>Remaining: <strong id="budgetRemainingText" class="text-emerald-400">৳0.00</strong></span>
+          </div>
+        </div>
+
+        <div id="budgetAdviceAlert" class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-mono flex items-center space-x-2 text-slate-300">
+          <i data-lucide="sparkles" class="w-4 h-4 text-sky-400 flex-shrink-0"></i>
+          <span id="budgetAdviceText">Set your monthly budget in the profile settings below to track limits.</span>
+        </div>
+      </div>
+
+      <!-- Settings Grid: Personal Details & Password -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Left Column: Personal Information Form -->
+        <div class="glass-card-premium rounded-2xl p-6 space-y-5 border-t-2 border-t-sky-500/60">
+          <div class="flex items-center space-x-2.5 pb-3 border-b border-slate-800">
+            <i data-lucide="user-cog" class="w-4 h-4 text-sky-400"></i>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Personal Information</h3>
+          </div>
+
+          <form id="editProfileForm" class="space-y-4" novalidate>
+            <!-- Full Name -->
+            <div>
+              <label for="profFullName" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Full Name</label>
+              <input 
+                type="text" 
+                id="profFullName" 
+                placeholder="e.g. Badhon Paul" 
+                class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full"
+              />
+            </div>
+
+            <!-- Email Address -->
+            <div>
+              <label for="profEmail" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Email Address</label>
+              <input 
+                type="email" 
+                id="profEmail" 
+                placeholder="name@example.com" 
+                class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full"
+              />
+            </div>
+
+            <!-- Username (Readonly) -->
+            <div>
+              <label for="profUsername" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Username (Account ID)</label>
+              <input 
+                type="text" 
+                id="profUsername" 
+                readonly 
+                class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full opacity-60 cursor-not-allowed font-mono text-slate-400"
+              />
+              <span class="text-[11px] font-mono text-slate-500 mt-1 block">Username cannot be changed</span>
+            </div>
+
+            <!-- Monthly Budget Input -->
+            <div>
+              <label for="profMonthlyBudget" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Monthly Budget Target (৳)</label>
+              <div class="relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">৳</span>
+                <input 
+                  type="number" 
+                  step="100" 
+                  id="profMonthlyBudget" 
+                  placeholder="20000" 
+                  class="glass-input pl-9 pr-4 py-2.5 rounded-xl text-sm w-full font-mono font-bold text-white"
+                />
+              </div>
+            </div>
+
+            <!-- Avatar Accent Color Selection -->
+            <div>
+              <label class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-2">Avatar Theme Color</label>
+              <div class="flex items-center space-x-3" id="avatarColorPicker">
+                <button type="button" data-color="sky" class="w-8 h-8 rounded-full bg-sky-500 border-2 border-white ring-2 ring-sky-400/50 transition"></button>
+                <button type="button" data-color="emerald" class="w-8 h-8 rounded-full bg-emerald-500 border-2 border-transparent hover:border-white transition"></button>
+                <button type="button" data-color="violet" class="w-8 h-8 rounded-full bg-violet-500 border-2 border-transparent hover:border-white transition"></button>
+                <button type="button" data-color="amber" class="w-8 h-8 rounded-full bg-amber-500 border-2 border-transparent hover:border-white transition"></button>
+                <button type="button" data-color="rose" class="w-8 h-8 rounded-full bg-rose-500 border-2 border-transparent hover:border-white transition"></button>
+              </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="pt-2">
+              <button type="submit" id="saveProfileBtn" class="flex items-center justify-center space-x-2 w-full py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 shadow-lg shadow-sky-500/25 transition">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span>Save Profile Changes</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Right Column: Password Management & Security -->
+        <div class="glass-card-premium rounded-2xl p-6 space-y-5 flex flex-col justify-between border-t-2 border-t-rose-500/60">
+          <div>
+            <div class="flex items-center space-x-2.5 pb-3 border-b border-slate-800">
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Security & Password</h3>
+            </div>
+
+            <form id="changePasswordForm" class="space-y-4 mt-4" novalidate>
+              <div>
+                <label for="currentPassword" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Current Password</label>
+                <input 
+                  type="password" 
+                  id="currentPassword" 
+                  required 
+                  placeholder="••••••••" 
+                  class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full"
+                />
+              </div>
+
+              <div>
+                <label for="newPassword" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">New Password</label>
+                <input 
+                  type="password" 
+                  id="newPassword" 
+                  required 
+                  placeholder="At least 6 characters" 
+                  class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full"
+                />
+              </div>
+
+              <div>
+                <label for="confirmNewPassword" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Confirm New Password</label>
+                <input 
+                  type="password" 
+                  id="confirmNewPassword" 
+                  required 
+                  placeholder="Re-type new password" 
+                  class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full"
+                />
+              </div>
+
+              <div class="pt-2">
+                <button type="submit" id="updatePasswordBtn" class="flex items-center justify-center space-x-2 w-full py-2.5 rounded-xl text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+                  <i data-lucide="key-round" class="w-4 h-4"></i>
+                  <span>Update Password</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Danger Zone within Security -->
+          <div class="pt-6 border-t border-slate-800/80 space-y-3">
+            <h4 class="text-xs font-mono uppercase text-rose-400 font-bold">Danger Zone</h4>
+            <div class="p-3.5 rounded-xl bg-rose-950/20 border border-rose-500/20 flex items-center justify-between">
+              <div>
+                <p class="text-xs font-semibold text-white">Reset All Expenses</p>
+                <p class="text-[11px] text-slate-400">Delete all your logged transactions and reset statistics.</p>
+              </div>
+              <button type="button" id="openResetModalBtn" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition">
+                Reset History
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODAL: ADD EXPENSE -->
+  <!-- ============================================== -->
+  <div id="addExpenseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div class="glass-card rounded-2xl w-full max-w-md p-6 space-y-5 border border-slate-700/80 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-sky-400">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+          </div>
+          <h3 class="text-base font-bold text-white">Add New Expense</h3>
+        </div>
+        <button id="closeAddModalBtn" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="addExpenseForm" class="space-y-4" novalidate>
+        
+        <!-- Amount -->
+        <div>
+          <label for="addAmount" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Amount (৳)</label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">৳</span>
+            <input 
+              type="number" 
+              step="0.01" 
+              id="addAmount" 
+              required 
+              placeholder="0.00" 
+              class="glass-input pl-9 pr-4 py-2.5 rounded-xl text-sm w-full font-mono font-bold text-white"
+            />
+          </div>
+        </div>
+
+        <!-- Category -->
+        <div>
+          <label for="addCategory" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Category</label>
+          <select id="addCategory" required class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full bg-slate-900 text-slate-200">
+            <option value="Food & Dining">🍔 Food & Dining</option>
+            <option value="Transportation">🚆 Transportation / Commute</option>
+            <option value="Groceries">🛒 Groceries</option>
+            <option value="Shopping">🛍️ Shopping</option>
+            <option value="Utilities">💡 Utilities & Bills</option>
+            <option value="Entertainment">🎬 Entertainment</option>
+            <option value="Health & Fitness">💊 Health & Fitness</option>
+            <option value="Others">📦 Others</option>
+          </select>
+        </div>
+
+        <!-- Date -->
+        <div>
+          <label for="addDate" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Date</label>
+          <input 
+            type="date" 
+            id="addDate" 
+            required 
+            class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full font-mono text-slate-200"
+          />
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label for="addDescription" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Description</label>
+          <input 
+            type="text" 
+            id="addDescription" 
+            placeholder="e.g., Weekly groceries, Metro Rail recharge" 
+            class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full placeholder-slate-500"
+          />
+        </div>
+
+        <!-- Form Actions -->
+        <div class="pt-2 flex items-center justify-end space-x-3">
+          <button type="button" id="cancelAddModalBtn" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition">
+            Cancel
+          </button>
+          <button type="submit" id="submitAddExpenseBtn" class="flex items-center space-x-1.5 px-5 py-2 rounded-xl text-xs font-semibold text-white bg-sky-500 hover:bg-sky-400 shadow-lg shadow-sky-500/25 transition">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Save Expense</span>
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: EDIT EXPENSE -->
+  <!-- ============================================== -->
+  <div id="editExpenseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div class="glass-card rounded-2xl w-full max-w-md p-6 space-y-5 border border-slate-700/80 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+          </div>
+          <h3 class="text-base font-bold text-white">Edit Expense</h3>
+        </div>
+        <button id="closeEditModalBtn" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="editExpenseForm" class="space-y-4" novalidate>
+        <input type="hidden" id="editExpenseId" />
+        
+        <!-- Amount -->
+        <div>
+          <label for="editAmount" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Amount (৳)</label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">৳</span>
+            <input 
+              type="number" 
+              step="0.01" 
+              id="editAmount" 
+              required 
+              class="glass-input pl-9 pr-4 py-2.5 rounded-xl text-sm w-full font-mono font-bold text-white"
+            />
+          </div>
+        </div>
+
+        <!-- Category -->
+        <div>
+          <label for="editCategory" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Category</label>
+          <select id="editCategory" required class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full bg-slate-900 text-slate-200">
+            <option value="Food & Dining">🍔 Food & Dining</option>
+            <option value="Transportation">🚆 Transportation / Commute</option>
+            <option value="Groceries">🛒 Groceries</option>
+            <option value="Shopping">🛍️ Shopping</option>
+            <option value="Utilities">💡 Utilities & Bills</option>
+            <option value="Entertainment">🎬 Entertainment</option>
+            <option value="Health & Fitness">💊 Health & Fitness</option>
+            <option value="Others">📦 Others</option>
+          </select>
+        </div>
+
+        <!-- Date -->
+        <div>
+          <label for="editDate" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Date</label>
+          <input 
+            type="date" 
+            id="editDate" 
+            required 
+            class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full font-mono text-slate-200"
+          />
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label for="editDescription" class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">Description</label>
+          <input 
+            type="text" 
+            id="editDescription" 
+            class="glass-input px-3.5 py-2.5 rounded-xl text-sm w-full"
+          />
+        </div>
+
+        <!-- Form Actions -->
+        <div class="pt-2 flex items-center justify-end space-x-3">
+          <button type="button" id="cancelEditModalBtn" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition">
+            Cancel
+          </button>
+          <button type="submit" id="submitEditExpenseBtn" class="flex items-center space-x-1.5 px-5 py-2 rounded-xl text-xs font-semibold text-white bg-amber-500 hover:bg-amber-400 shadow-lg shadow-amber-500/25 transition">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>Update Expense</span>
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: CALENDAR DAY DETAILS -->
+  <!-- ============================================== -->
+  <div id="dayDetailsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div class="glass-card rounded-2xl w-full max-w-lg p-6 space-y-4 border border-slate-700/80 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div>
+          <h3 id="dayModalTitle" class="text-base font-bold text-white">Expenses for Date</h3>
+          <p id="dayModalSubtitle" class="text-xs font-mono text-slate-400">Total: ৳0.00 (0 records)</p>
+        </div>
+        <button id="closeDayModalBtn" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="dayTransactionsList" class="max-h-72 overflow-y-auto space-y-2 pr-1">
+        <!-- Dynamically rendered list of expenses for clicked day -->
+      </div>
+
+      <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+        <button type="button" id="dayAddExpenseBtn" class="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-sky-500 hover:bg-sky-400 transition shadow">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span>Add Expense for this Day</span>
+        </button>
+        <button type="button" id="closeDayModalBtnBottom" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: RESET EXPENSES CONFIRMATION -->
+  <!-- ============================================== -->
+  <div id="resetExpensesModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div class="glass-card rounded-2xl w-full max-w-sm p-6 space-y-4 border border-rose-500/40 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      <div class="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 mx-auto">
+        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+      </div>
+
+      <div class="text-center space-y-1">
+        <h3 class="text-base font-bold text-white">Reset All Expenses?</h3>
+        <p class="text-xs text-slate-400">This action will permanently delete all your logged expenses and cannot be undone.</p>
+      </div>
+
+      <div>
+        <label for="resetConfirmInput" class="block text-[11px] font-mono uppercase text-slate-400 mb-1">Type <span class="text-rose-400 font-bold">RESET</span> to confirm:</label>
+        <input 
+          type="text" 
+          id="resetConfirmInput" 
+          placeholder="RESET" 
+          class="glass-input px-3.5 py-2 rounded-xl text-xs w-full font-mono text-center"
+        />
+      </div>
+
+      <div class="flex items-center space-x-2 pt-2">
+        <button type="button" id="cancelResetModalBtn" class="w-1/2 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition">
+          Cancel
+        </button>
+        <button type="button" id="confirmResetBtn" class="w-1/2 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 transition">
+          Yes, Reset All
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- STRICT FOOTER: ONLY 'developed by badhon' -->
+  <footer class="mt-auto py-6 border-t border-slate-800/80 text-center text-xs text-slate-500 font-mono">
+    developed by badhon
+  </footer>
+
+  <!-- Client-side Logic Script -->
+  <script src="script.js"></script>
+</body>
+</html>
