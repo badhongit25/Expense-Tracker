@@ -248,6 +248,16 @@
       transition: all 0.2s ease;
     }
 
+    /* Error Shake Animation on Invalid Credentials */
+    @keyframes shakeCard {
+      0%, 100% { transform: translateX(0); }
+      15%, 55% { transform: translateX(-9px); }
+      35%, 75% { transform: translateX(9px); }
+    }
+    .shake-error {
+      animation: shakeCard 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
+    }
+
     /* Ripple micro-interaction */
     .ripple-btn {
       position: relative;
@@ -666,6 +676,6 @@
   </footer>
 
   <!-- Client-side Logic Script -->
-  <script src="script.js?v=2.5.0"></script>
+  <script src="script.js?v=2.6.0"></script>
 </body>
 </html>

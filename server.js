@@ -286,6 +286,18 @@ async function initDatabase() {
       if (parseInt(expRes.rows[0].count, 10) === 0) {
         await seedSampleExpenses(demoUserId);
       }
+
+      // Also ensure badhon user exists
+      const badhonRes = await client.query('SELECT id FROM users WHERE username = $1', ['badhon']);
+      if (badhonRes.rows.length === 0) {
+        const hashedPassword = await bcrypt.hash('password123', 10);
+        const badhonIns = await client.query(
+          'INSERT INTO users (username, password, full_name, email, monthly_budget, avatar_color) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+          ['badhon', hashedPassword, 'Badhon Paul', 'badhon@expensetracker.local', 35000, 'emerald']
+        );
+        console.log('✅ Badhon user seeded (badhon / password123)');
+        await seedSampleExpenses(badhonIns.rows[0].id);
+      }
     } finally {
       client.release();
     }

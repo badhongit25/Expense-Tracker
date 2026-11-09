@@ -92,6 +92,37 @@
     } catch (e) {}
   }
 
+  function getRegisteredUsers() {
+    try {
+      const raw = localStorage.getItem('et_registered_users');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    const defaultUsers = [
+      {
+        id: 1,
+        username: 'demo',
+        password: 'password123',
+        full_name: 'Demo User',
+        email: 'demo@expensetracker.local',
+        monthly_budget: 25000,
+        avatar_color: 'sky'
+      },
+      {
+        id: 2,
+        username: 'badhon',
+        password: 'password123',
+        full_name: 'Badhon Paul',
+        email: 'badhon@expensetracker.local',
+        monthly_budget: 35000,
+        avatar_color: 'emerald'
+      }
+    ];
+    try {
+      localStorage.setItem('et_registered_users', JSON.stringify(defaultUsers));
+    } catch (e) {}
+    return defaultUsers;
+  }
+
   function createMockResponse(data, status = 200) {
     return {
       ok: status >= 200 && status < 300,
@@ -114,28 +145,60 @@
 
     // 1. Auth endpoints
     if (pathname === '/api/login') {
-      const user = getMockUser();
-      if (body.username === 'demo' || (body.username && body.password)) {
-        user.username = body.username || 'demo';
-        saveMockUser(user);
+      const users = getRegisteredUsers();
+      const enteredUsername = (body.username || '').trim().toLowerCase();
+      const enteredPassword = (body.password || '').trim();
+
+      const matchedUser = users.find(u => u.username.toLowerCase() === enteredUsername);
+
+      // STRICT VALIDATION: Username must exist and password must strictly match
+      if (matchedUser && matchedUser.password === enteredPassword) {
+        saveMockUser(matchedUser);
         localStorage.setItem('et_is_authenticated', 'true');
-        return createMockResponse({ success: true, message: 'Logged in successfully!', user });
+        return createMockResponse({
+          success: true,
+          message: 'Logged in successfully!',
+          user: matchedUser
+        });
       }
-      return createMockResponse({ success: false, message: 'Invalid username or password' }, 401);
+
+      // Reject invalid credentials with clear error
+      return createMockResponse({
+        success: false,
+        message: 'Invalid username or password. (Hint: demo / password123)'
+      }, 401);
     }
 
     if (pathname === '/api/register') {
-      const user = {
+      const users = getRegisteredUsers();
+      const cleanUser = (body.username || '').trim();
+      const cleanPass = (body.password || '').trim();
+
+      if (!cleanUser || !cleanPass) {
+        return createMockResponse({ success: false, message: 'Username and password are required' }, 400);
+      }
+
+      const existing = users.find(u => u.username.toLowerCase() === cleanUser.toLowerCase());
+      if (existing) {
+        return createMockResponse({ success: false, message: 'Username is already taken.' }, 400);
+      }
+
+      const newUser = {
         id: Date.now(),
-        username: body.username || 'newuser',
-        full_name: body.full_name || body.username || 'New User',
-        email: body.email || `${body.username}@expensetracker.local`,
-        monthly_budget: 20000,
-        avatar_color: 'sky'
+        username: cleanUser,
+        password: cleanPass,
+        full_name: body.full_name || cleanUser,
+        email: body.email || `${cleanUser}@expensetracker.local`,
+        monthly_budget: parseFloat(body.monthly_budget) || 20000,
+        avatar_color: body.avatar_color || 'sky'
       };
-      saveMockUser(user);
+      users.push(newUser);
+      try {
+        localStorage.setItem('et_registered_users', JSON.stringify(users));
+      } catch (e) {}
+      saveMockUser(newUser);
       localStorage.setItem('et_is_authenticated', 'true');
-      return createMockResponse({ success: true, message: 'Registered successfully!', user });
+      return createMockResponse({ success: true, message: 'Registered successfully!', user: newUser }, 201);
     }
 
     if (pathname === '/api/logout') {
@@ -581,6 +644,15 @@
       if (authAlert) authAlert.classList.add('hidden');
     }
 
+    function shakeLoginCard() {
+      const card = document.getElementById('loginCardContainer');
+      if (!card) return;
+      card.classList.remove('shake-error');
+      void card.offsetWidth; // trigger DOM reflow
+      card.classList.add('shake-error');
+      setTimeout(() => card.classList.remove('shake-error'), 500);
+    }
+
     /**
      * Toggle Floor Lamp ON / OFF with Pull-Cord Tactile Physics
      */
@@ -724,39 +796,43 @@
           triggerSuccessAnimation(data.user?.full_name || data.user?.username || username, 'Login Successful!');
           return;
         } else {
-          // Graceful fallback to client engine if backend rejected or database empty
+          // If server returned 401 or !ok, test if user is registered offline
           const fallbackRes = await mockApiHandler('/api/login', {
             method: 'POST',
             body: JSON.stringify({ username, password })
           });
           const fallbackData = await safeJson(fallbackRes);
-          if (fallbackData.success) {
+          if (fallbackRes.ok && fallbackData.success) {
             triggerSuccessAnimation(fallbackData.user?.full_name || fallbackData.user?.username || username, 'Login Successful!');
             return;
           }
-          showAlert(data.message || 'Login failed. Please check your credentials.');
+
+          // STRICT: Invalid username or password - DO NOT LOG IN
+          showAlert(data.message || fallbackData.message || 'Invalid username or password. (Hint: demo / password123)');
           submitBtn.disabled = false;
           submitBtn.innerHTML = originalText;
           refreshIcons();
+          shakeLoginCard();
+          return;
         }
       } catch (err) {
-        // Absolutely avoid connection error alerts - seamlessly authenticate via client engine
-        try {
-          const fallbackRes = await mockApiHandler('/api/login', {
-            method: 'POST',
-            body: JSON.stringify({ username, password })
-          });
-          const fallbackData = await safeJson(fallbackRes);
-          if (fallbackData.success) {
-            triggerSuccessAnimation(fallbackData.user?.full_name || fallbackData.user?.username || username, 'Login Successful!');
-            return;
-          }
-        } catch (e) {}
+        // If network completely failed (offline), check strictly against client credentials
+        const fallbackRes = await mockApiHandler('/api/login', {
+          method: 'POST',
+          body: JSON.stringify({ username, password })
+        });
+        const fallbackData = await safeJson(fallbackRes);
+        if (fallbackRes.ok && fallbackData.success) {
+          triggerSuccessAnimation(fallbackData.user?.full_name || fallbackData.user?.username || username, 'Login Successful!');
+          return;
+        }
 
-        showAlert('Login failed. Please check your credentials.');
+        // STRICT: Invalid credentials
+        showAlert(fallbackData.message || 'Invalid username or password. (Hint: demo / password123)');
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
         refreshIcons();
+        shakeLoginCard();
       }
     });
 
